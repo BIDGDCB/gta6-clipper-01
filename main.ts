@@ -4,7 +4,8 @@
 // address to the gate. It reads VIDEO.json from the repository root, checks
 // that it holds a string "url" field, and writes the same bytes to the
 // output directory. It prints nothing on success and exits non-zero when
-// VIDEO.json is missing or malformed.
+// VIDEO.json is missing, malformed, or holds a placeholder instead of a
+// real published YouTube Shorts/watch URL.
 //
 // The clip this entry hands in is clip.mp4 in this repository: a vertical
 // 9:16 cut of Rockstar's official GTA VI Launch Trailer, opening on the
@@ -39,6 +40,13 @@ try {
 
 if (typeof parsed !== 'object' || parsed === null || typeof (parsed as { url?: unknown }).url !== 'string') {
   console.error('VIDEO.json must be an object with a string "url" field');
+  process.exit(1);
+}
+
+const url = (parsed as { url: string }).url;
+const youtubeUrl = /^https:\/\/www\.youtube\.com\/(shorts\/[A-Za-z0-9_-]{6,}|watch\?v=[A-Za-z0-9_-]{6,})$/;
+if (!youtubeUrl.test(url)) {
+  console.error(`VIDEO.json "url" must be a real YouTube Shorts or watch URL, got: ${url}`);
   process.exit(1);
 }
 
